@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRA Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>HRA Calculator</h1>
+        <input type="file" id="file-input" multiple accept="application/pdf">
+        <button id="calculate-btn">Calculate HRA</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+input[type="file"] {
+    margin-bottom: 20px;
+}
+
+button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+
+
+document.getElementById('calculate-btn').addEventListener('click', async () => {
+    const files = document.getElementById('file-input').files;
+    let totalHRA = 0;
+
+    for (const file of files) {
+        const pdf = await pdfjsLib.getDocument(URL.createObjectURL(file)).promise;
+        const numPages = pdf.numPages;
+
+        for (let i = 1; i <= numPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            const textItems = textContent.items;
+
+            textItems.forEach(item => {
+                const text = item.str;
+                const match = text.match(/House Rent Allowance\s*₹([\d,]+\.\d{2})/);
+                if (match) {
+                    const amount = parseFloat(match[1].replace(/,/g, ''));
+                    totalHRA += amount;
+                }
+            });
+        }
+    }
+
+    swal("Total House Rent Allowance", `₹${totalHRA.toFixed(2)}`);
+});
